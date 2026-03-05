@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { SiteHeader } from '../../components/public/SiteHeader';
@@ -6,6 +6,7 @@ import { SiteFooter } from '../../components/public/SiteFooter';
 import { applicationsApi } from '../../api';
 import { ApplicationInput, validateApplicationInput, provincias, zonasPersonaCuidada, necesidadesOptions } from '../../utils/validation';
 import { apiErrorMessage } from '../../utils/uiMessages';
+import { useToast } from '../../components/ui/Toaster';
 
 type FieldErrors = Partial<Record<keyof ApplicationInput, string>>;
 
@@ -44,19 +45,24 @@ const fieldClass = (hasError: boolean) =>
 
 function ApplicationForm() {
   const navigate = useNavigate();
+  const { toast, dismiss } = useToast();
   const [form, setForm] = useState<ApplicationInput>(initialForm);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [serverError, setServerError] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [clientSubmissionId] = useState(createClientSubmissionId);
+  const loadingToastId = useRef<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: applicationsApi.create,
     onSuccess: () => {
-      navigate('/gracias');
+      if (loadingToastId.current) dismiss(loadingToastId.current);
+      toast.success('¡Solicitud enviada! Te contactaremos pronto.');
+      setTimeout(() => navigate('/gracias'), 800);
     },
     onError: (err: any) => {
-      setServerError(err?.message || apiErrorMessage);
+      if (loadingToastId.current) dismiss(loadingToastId.current);
+      const msg = err?.response?.data?.detail || err?.response?.data?.error || err?.message || apiErrorMessage;
+      toast.error(msg);
     }
   });
 
@@ -67,7 +73,6 @@ function ApplicationForm() {
       delete next[name];
       return next;
     });
-    setServerError('');
   };
 
   const sanitize = (values: ApplicationInput): ApplicationInput => ({
@@ -88,35 +93,44 @@ function ApplicationForm() {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (honeypot) return; // Spam
+
     const cleaned = sanitize(form);
     const validation = validateApplicationInput(cleaned);
 
     if (!validation.valid) {
       setErrors(validation.errors);
-      setServerError('Revisá los campos marcados.');
+      toast.error('Revisá los campos marcados en rojo antes de continuar.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    setServerError('');
-    
-    // Convert logic to map with prisma expectations (the API accepts some fields slightly differently but we pass what we have)
-    mutation.mutate({
-      ...cleaned,
+    loadingToastId.current = toast.loading('Enviando solicitud...');
+
+    // Build payload with ONLY the camelCase field names that Prisma expects
+    const payload = {
+      nombre: cleaned.nombre,
+      apellido: cleaned.apellido,
+      dni: cleaned.dni,
+      email: cleaned.email,
+      telefono: cleaned.telefono,
+      provincia: cleaned.provincia,
       zonaPersonaCuidada: cleaned.zona_persona_cuidada,
       ofreceServicios: cleaned.ofrece_servicios === 'si',
-      tipoServicio: cleaned.tipo_servicio,
+      tipoServicio: cleaned.ofrece_servicios === 'si' ? cleaned.tipo_servicio : '',
+      necesidades: cleaned.necesidades,
+      motivacion: cleaned.motivacion,
       aceptaNormas: cleaned.acepta_normas,
+      sugerencias: cleaned.sugerencias,
       clientSubmissionId,
-    } as any);
+    };
+
+    mutation.mutate(payload as any);
   };
 
   return (
     <form className="space-y-10" onSubmit={handleSubmit}>
-      {serverError && (
-        <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {serverError}
-        </div>
-      )}
+
 
       <div className="grid gap-6 md:grid-cols-2">
         <div>
@@ -220,8 +234,18 @@ function ApplicationForm() {
         <input type="text" tabIndex={-1} value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
       </div>
 
-      <button type="submit" disabled={mutation.isPending} className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-terracotta)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 disabled:opacity-70">
-        {mutation.isPending ? 'Enviando...' : 'Enviar solicitud'}
+      <button
+        type="submit"
+        disabled={mutation.isPending || !form.acepta_normas}
+        className="inline-flex items-center justify-center gap-2 rounded-full bg-[color:var(--color-terracotta)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        title={!form.acepta_normas ? 'Debés aceptar las normas para continuar' : ''}
+      >
+        {mutation.isPending ? (
+          <>
+            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            Enviando...
+          </>
+        ) : 'Enviar solicitud'}
       </button>
     </form>
   );

@@ -86,16 +86,35 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-5 text-center">
+          <div className="mt-5 text-center flex items-center justify-between px-2">
+            <a href="/" className="text-sm text-muted hover:text-accent transition flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              Volver al inicio
+            </a>
             <a href="/admin/forgot-password" className="text-sm text-muted hover:text-accent transition">
               Olvidé mi contraseña
             </a>
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted mt-6">
-          © {new Date().getFullYear()} Cuidar a Nuestros Padres
-        </p>
+        <div className="flex flex-col items-center gap-5 mt-8 border-t border-black/5 pt-6 pb-4">
+          <div className="flex flex-row items-center justify-center gap-3">
+            <span className="text-[10px] uppercase tracking-wider text-muted/70 font-medium whitespace-nowrap">Desarrollado y diseñado por</span>
+            <a href="#" className="group transition-opacity hover:opacity-80 flex items-center h-14 w-auto">
+              <img 
+                src="/logo-nuevo.png" 
+                alt="JNSIX Desarrollo de Software" 
+                className="h-full w-auto object-contain mix-blend-multiply opacity-50 group-hover:opacity-100 transition-opacity grayscale"
+                title="JNSIX"
+                style={{ filter: 'invert(1) contrast(1.2)' }}
+              />
+            </a>
+          </div>
+          
+          <p className="text-center text-[11px] text-muted/60">
+            © {new Date().getFullYear()} Cuidar a Nuestros Padres
+          </p>
+        </div>
       </div>
     </div>
   );

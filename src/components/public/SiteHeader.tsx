@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 type SiteHeaderProps = {
   actionLabel?: string;
@@ -9,17 +9,14 @@ export function SiteHeader({
   actionLabel = 'Solicitar ingreso',
   actionHref = '/solicitar',
 }: SiteHeaderProps) {
-  const location = useLocation();
-  const isHome = location.pathname === '/';
-
   const navItems = [
-    { label: 'Inicio', href: '/#inicio' },
-    { label: 'Cómo funciona', href: '/#como-funciona' },
-    { label: 'Servicios', href: '/#ofrecemos' },
-    { label: 'Normas', href: '/#reglas' },
-    { label: 'Anuncios', href: '/anuncios' },
-    { label: 'Webinars', href: '/webinars' },
-    { label: 'Panel', href: '/admin/login' },
+    { label: 'Inicio', href: '/', hash: '' },
+    { label: 'Cómo funciona', href: '/', hash: '#como-funciona' },
+    { label: 'Servicios', href: '/', hash: '#ofrecemos' },
+    { label: 'Normas', href: '/', hash: '#reglas' },
+    { label: 'Anuncios', href: '/anuncios', hash: '' },
+    { label: 'Webinars', href: '/webinars', hash: '' },
+    { label: 'Panel', href: '/admin/login', hash: '' },
   ];
 
   return (
@@ -39,25 +36,15 @@ export function SiteHeader({
         </Link>
 
         <nav className="hidden items-center gap-7 text-base font-medium text-black/70 lg:flex">
-          {navItems.map((item) =>
-            item.href.startsWith('/#') ? (
-              <a
-                key={item.label}
-                href={isHome ? item.href : `/${item.href}`}
-                className="transition hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--color-terracotta)]"
-              >
-                {item.label}
-              </a>
-            ) : (
-              <Link
-                key={item.label}
-                to={item.href}
-                className="transition hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--color-terracotta)]"
-              >
-                {item.label}
-              </Link>
-            )
-          )}
+          {navItems.map((item) => (
+            <Link
+              key={item.label}
+              to={{ pathname: item.href, hash: item.hash }}
+              className="transition hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--color-terracotta)]"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <Link

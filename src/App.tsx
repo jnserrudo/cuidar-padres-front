@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Toaster } from './components/ui/Toaster';
 
 // Public pages
 import HomePage from './pages/public/HomePage';
@@ -21,6 +22,7 @@ import { WebinarsPage, AnnouncementsPage as AnnouncementsAdminPage, EmailTemplat
 function App() {
   return (
     <AuthProvider>
+      <Toaster />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
