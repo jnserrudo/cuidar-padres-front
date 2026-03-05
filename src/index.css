@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-cream: #fff7fa;
+  --color-ink: #2c2330;
+  --color-terracotta: #d889a7;
+  --color-sage: #7b5c6a;
+  --color-sun: #f0b6c9;
+  --color-stone: #f6edf1;
+  --color-rose: #fdeaf0;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  background-color: var(--color-cream);
+  background-image: none;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--color-terracotta);
+  color: #fff;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
+
+.fade-up-delay-1 {
+  animation-delay: 120ms;
+}
+
+.fade-up-delay-2 {
+  animation-delay: 240ms;
+}
+
+.fade-up-delay-3 {
+  animation-delay: 360ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up,
+  .fade-up-delay-1,
+  .fade-up-delay-2,
+  .fade-up-delay-3 {
+    animation: none;
+  }
+}
