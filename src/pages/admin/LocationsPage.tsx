@@ -1,14 +1,24 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { locationsApi, Location } from '../../api';
+import { locationsApi, whatsappGroupsApi, Location } from '../../api';
+import { useToast } from '../../components/ui/Toaster';
 
 const EMPTY: Partial<Location> = { type: 'ZONA', name: '', description: '', whatsappUrl: '' };
 
 export default function LocationsPage() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [form, setForm] = useState<Partial<Location>>(EMPTY);
   const [editing, setEditing] = useState<string | null>(null);
+  const [assigningGroups, setAssigningGroups] = useState<string | null>(null);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  
   const { data = [], isLoading } = useQuery({ queryKey: ['locations'], queryFn: locationsApi.list });
+  
+  const { data: whatsappGroups = [] } = useQuery({ 
+    queryKey: ['whatsapp-groups'], 
+    queryFn: whatsappGroupsApi.list 
+  });
 
   const create = useMutation({
     mutationFn: locationsApi.create,
@@ -23,6 +33,22 @@ export default function LocationsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['locations'] }),
   });
 
+  const assignGroups = useMutation({
+    mutationFn: ({ locationId, groupIds }: { locationId: string; groupIds: string[] }) =>
+      Promise.all(
+        groupIds.map(groupId => 
+          whatsappGroupsApi.assignLocations(groupId, [locationId])
+        )
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['whatsapp-groups'] });
+      setAssigningGroups(null);
+      setSelectedGroups([]);
+      toast.success('Grupos asignados correctamente');
+    },
+    onError: () => toast.error('Error al asignar grupos')
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editing) update.mutate({ id: editing, data: form });
@@ -30,6 +56,12 @@ export default function LocationsPage() {
   };
 
   const startEdit = (loc: Location) => { setEditing(loc.id); setForm(loc); };
+
+  const handleAssignGroups = (locationId: string) => {
+    if (selectedGroups.length > 0) {
+      assignGroups.mutate({ locationId, groupIds: selectedGroups });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -83,7 +115,7 @@ export default function LocationsPage() {
               <th className="px-4 py-3 font-medium">Tipo</th>
               <th className="px-4 py-3 font-medium">Nombre</th>
               <th className="px-4 py-3 font-medium hidden md:table-cell">Descripción</th>
-              <th className="px-4 py-3 font-medium hidden lg:table-cell">WhatsApp</th>
+              <th className="px-4 py-3 font-medium">Grupos WhatsApp</th>
               <th className="px-4 py-3 font-medium"></th>
             </tr></thead>
             <tbody>
@@ -92,8 +124,13 @@ export default function LocationsPage() {
                   <td className="px-4 py-3"><span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">{loc.type}</span></td>
                   <td className="px-4 py-3 font-medium text-foreground">{loc.name}</td>
                   <td className="px-4 py-3 text-muted text-xs hidden md:table-cell max-w-xs truncate">{loc.description || '—'}</td>
-                  <td className="px-4 py-3 text-xs hidden lg:table-cell">
-                    {loc.whatsappUrl ? <a href={loc.whatsappUrl} target="_blank" rel="noreferrer" className="text-accent hover:underline">Ver link</a> : '—'}
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setAssigningGroups(loc.id)}
+                      className="text-xs text-purple-600 hover:underline"
+                    >
+                      Gestionar grupos
+                    </button>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
@@ -108,6 +145,60 @@ export default function LocationsPage() {
           </table>
         }
       </div>
+
+      {/* Assign Groups Modal */}
+      {assigningGroups && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setAssigningGroups(null)}>
+          <div className="bg-background rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="font-bold text-lg mb-4">Asignar Grupos de WhatsApp</h3>
+            <p className="text-sm text-muted mb-4">
+              Selecciona los grupos que quieras asignar a esta ubicación
+            </p>
+            <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+              {whatsappGroups.map(group => (
+                <label key={group.id} className="flex items-center gap-3 p-3 rounded-lg border border-sun/20 hover:bg-stone/30 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedGroups.includes(group.id)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedGroups([...selectedGroups, group.id]);
+                      } else {
+                        setSelectedGroups(selectedGroups.filter(id => id !== group.id));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{group.name}</p>
+                    <p className="text-xs text-muted">
+                      {group.currentSize}/{group.capacity} miembros
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleAssignGroups(assigningGroups)}
+                disabled={selectedGroups.length === 0}
+                className="flex-1 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition disabled:opacity-50"
+              >
+                Asignar {selectedGroups.length} grupo(s)
+              </button>
+              <button
+                onClick={() => {
+                  setAssigningGroups(null);
+                  setSelectedGroups([]);
+                }}
+                className="px-4 py-2 rounded-lg border border-sun/40 text-sm text-muted hover:bg-stone transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

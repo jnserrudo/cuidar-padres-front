@@ -1,10 +1,10 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { SiteHeader } from '../../components/public/SiteHeader';
 import { SiteFooter } from '../../components/public/SiteFooter';
-import { applicationsApi } from '../../api';
-import { ApplicationInput, validateApplicationInput, provincias, zonasPersonaCuidada, necesidadesOptions } from '../../utils/validation';
+import { applicationsApi, locationsApi } from '../../api';
+import { ApplicationInput, validateApplicationInput, necesidadesOptions } from '../../utils/validation';
 import { apiErrorMessage } from '../../utils/uiMessages';
 import { useToast } from '../../components/ui/Toaster';
 
@@ -51,6 +51,23 @@ function ApplicationForm() {
   const [honeypot, setHoneypot] = useState('');
   const [clientSubmissionId] = useState(createClientSubmissionId);
   const loadingToastId = useRef<string | null>(null);
+
+  // Cargar ubicaciones desde la API
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: locationsApi.list
+  });
+
+  // Crear arrays dinámicos basados en la API
+  const provincias = locations
+    .filter(loc => loc.type === 'PROVINCIA')
+    .map(loc => loc.name)
+    .sort();
+
+  const zonasPersonaCuidada = locations
+    .filter(loc => loc.type === 'ZONA')
+    .map(loc => loc.name)
+    .sort();
 
   const mutation = useMutation({
     mutationFn: applicationsApi.create,

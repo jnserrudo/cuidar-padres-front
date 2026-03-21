@@ -109,6 +109,31 @@ export const usersApi = {
   delete: (id: string) => request(`/users/${id}`, { method: 'DELETE' }),
 };
 
+// WHATSAPP GROUPS
+export const whatsappGroupsApi = {
+  list: () => request<WhatsAppGroup[]>('/whatsapp-groups'),
+  get: (id: string) => request<WhatsAppGroupDetail>(`/whatsapp-groups/${id}`),
+  create: (data: Partial<WhatsAppGroup>) =>
+    request<WhatsAppGroup>('/whatsapp-groups', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Partial<WhatsAppGroup>) =>
+    request<WhatsAppGroup>(`/whatsapp-groups/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) => request(`/whatsapp-groups/${id}`, { method: 'DELETE' }),
+  assignLocations: (groupId: string, locationIds: string[], priority?: number) =>
+    request(`/whatsapp-groups/${groupId}/assign-locations`, {
+      method: 'POST',
+      body: JSON.stringify({ locationIds, priority })
+    }),
+  unassignLocation: (groupId: string, locationId: string) =>
+    request(`/whatsapp-groups/${groupId}/unassign-location/${locationId}`, { method: 'DELETE' }),
+  bulkUpdateUrl: (groupId: string, newUrl: string) =>
+    request<BulkUpdateResponse>('/whatsapp-groups/bulk-update-url', {
+      method: 'PATCH',
+      body: JSON.stringify({ groupId, newUrl })
+    }),
+  getLocationGroups: (locationId: string) =>
+    request<WhatsAppGroup[]>(`/locations/${locationId}/whatsapp-groups`)
+};
+
 // TYPES
 export interface User {
   id: string; username: string; email: string; role: string;
@@ -143,6 +168,31 @@ export interface Announcement {
 }
 export interface EmailTemplate {
   id?: string; motivo: string; subject: string; body: string;
+}
+export interface WhatsAppGroup {
+  id: string;
+  name: string;
+  url: string;
+  capacity: number;
+  currentSize: number;
+  isActive: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface WhatsAppGroupDetail extends WhatsAppGroup {
+  locations: Array<{
+    location: Location;
+    priority: number;
+    assignedAt: string;
+    assignedBy?: string;
+  }>;
+}
+export interface BulkUpdateResponse {
+  message: string;
+  group: WhatsAppGroup;
+  affectedLocations: number;
+  locations: string[];
 }
 export interface PaginatedResponse<T> {
   data: T[]; total: number; page: number; limit: number; totalPages: number;

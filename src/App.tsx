@@ -17,6 +17,7 @@ import LoginPage from './pages/admin/LoginPage';
 import ApplicationsPage from './pages/admin/ApplicationsPage';
 import LocationsPage from './pages/admin/LocationsPage';
 import PressPage from './pages/admin/PressPage';
+import WhatsAppGroupsPage from './pages/admin/WhatsAppGroupsPage';
 import { WebinarsPage, AnnouncementsPage as AnnouncementsAdminPage, EmailTemplatesPage, UsersPage } from './pages/admin/OtherPages';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route index element={<Navigate to="applications" replace />} />
             <Route path="applications" element={<ApplicationsPage />} />
             <Route path="locations" element={<LocationsPage />} />
+            <Route path="whatsapp-groups" element={<WhatsAppGroupsPage />} />
             <Route path="press" element={<PressPage />} />
             <Route path="webinars" element={<WebinarsPage />} />
             <Route path="announcements" element={<AnnouncementsAdminPage />} />
