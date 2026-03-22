@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationsApi, Application } from '../../api';
+import { useToast } from '../../components/ui/Toaster';
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   NEW:          { label: 'Nueva',         color: 'bg-blue-100 text-blue-700' },
@@ -18,6 +19,7 @@ const ALL_STATUSES = Object.keys(STATUS_LABELS);
 
 export default function ApplicationsPage() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
@@ -37,13 +39,30 @@ export default function ApplicationsPage() {
 
   const bulkMutation = useMutation({
     mutationFn: () => applicationsApi.bulkUpdate([...selected], bulkStatus),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['applications'] }); setSelected(new Set()); },
+    onSuccess: () => { 
+      qc.invalidateQueries({ queryKey: ['applications'] }); 
+      setSelected(new Set()); 
+      const statusLabel = STATUS_LABELS[bulkStatus]?.label || bulkStatus;
+      toast.success(`✅ ${selected.size} solicitudes actualizadas a "${statusLabel}"`);
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al actualizar solicitudes';
+      toast.error(`❌ ${msg}`);
+    }
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Application> }) =>
       applicationsApi.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['applications'] }); setDetail(null); },
+    onSuccess: () => { 
+      qc.invalidateQueries({ queryKey: ['applications'] }); 
+      setDetail(null); 
+      toast.success('✅ Solicitud actualizada correctamente');
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al actualizar solicitud';
+      toast.error(`❌ ${msg}`);
+    }
   });
 
   const toggleSelect = (id: string) => {
@@ -151,7 +170,14 @@ export default function ApplicationsPage() {
             </thead>
             <tbody>
               {isLoading && (
-                <tr><td colSpan={7} className="text-center py-12 text-muted">Cargando…</td></tr>
+                <tr>
+                  <td colSpan={7} className="text-center py-12">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent mb-3"></div>
+                      <p className="text-sm text-muted">Cargando solicitudes...</p>
+                    </div>
+                  </td>
+                </tr>
               )}
               {!isLoading && !data?.data.length && (
                 <tr><td colSpan={7} className="text-center py-12 text-muted">Sin resultados</td></tr>

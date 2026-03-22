@@ -53,7 +53,7 @@ function ApplicationForm() {
   const loadingToastId = useRef<string | null>(null);
 
   // Cargar ubicaciones desde la API
-  const { data: locations = [] } = useQuery({
+  const { data: locations = [], isLoading: loadingLocations } = useQuery({
     queryKey: ['locations'],
     queryFn: locationsApi.list
   });
@@ -177,18 +177,32 @@ function ApplicationForm() {
         </div>
         <div>
           <label className="text-sm font-semibold" htmlFor="provincia">Zona en la que vivís</label>
-          <select id="provincia" value={form.provincia} onChange={(e) => updateField('provincia', e.target.value)} className={fieldClass(!!errors.provincia)}>
-            <option value="">Selecciona una opción</option>
+          <select 
+            id="provincia" 
+            value={form.provincia} 
+            onChange={(e) => updateField('provincia', e.target.value)} 
+            className={fieldClass(!!errors.provincia)}
+            disabled={loadingLocations}
+          >
+            <option value="">{loadingLocations ? 'Cargando ubicaciones...' : 'Selecciona una opción'}</option>
             {provincias.map((prov) => <option key={prov} value={prov}>{prov}</option>)}
           </select>
+          {loadingLocations && <p className="mt-1 text-xs text-blue-600">⏳ Cargando ubicaciones disponibles...</p>}
           {errors.provincia && <p className="mt-1 text-xs text-rose-600">{errors.provincia}</p>}
         </div>
         <div>
           <label className="text-sm font-semibold" htmlFor="zona_persona_cuidada">Zona de la persona cuidada</label>
-          <select id="zona_persona_cuidada" value={form.zona_persona_cuidada} onChange={(e) => updateField('zona_persona_cuidada', e.target.value)} className={fieldClass(!!errors.zona_persona_cuidada)}>
-            <option value="">Selecciona una opción</option>
+          <select 
+            id="zona_persona_cuidada" 
+            value={form.zona_persona_cuidada} 
+            onChange={(e) => updateField('zona_persona_cuidada', e.target.value)} 
+            className={fieldClass(!!errors.zona_persona_cuidada)}
+            disabled={loadingLocations}
+          >
+            <option value="">{loadingLocations ? 'Cargando zonas...' : 'Selecciona una opción'}</option>
             {zonasPersonaCuidada.map((zona) => <option key={zona} value={zona}>{zona}</option>)}
           </select>
+          {loadingLocations && <p className="mt-1 text-xs text-blue-600">⏳ Cargando zonas disponibles...</p>}
           {errors.zona_persona_cuidada && <p className="mt-1 text-xs text-rose-600">{errors.zona_persona_cuidada}</p>}
         </div>
         <div>

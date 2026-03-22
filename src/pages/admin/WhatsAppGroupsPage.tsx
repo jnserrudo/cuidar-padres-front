@@ -29,9 +29,12 @@ export default function WhatsAppGroupsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['whatsapp-groups'] });
       resetForm();
-      toast.success('Grupo creado correctamente');
+      toast.success('✅ Grupo creado correctamente');
     },
-    onError: () => toast.error('Error al crear grupo')
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al crear grupo';
+      toast.error(`❌ ${msg}`);
+    }
   });
 
   const updateMutation = useMutation({
@@ -40,18 +43,24 @@ export default function WhatsAppGroupsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['whatsapp-groups'] });
       resetForm();
-      toast.success('Grupo actualizado correctamente');
+      toast.success('✅ Grupo actualizado correctamente');
     },
-    onError: () => toast.error('Error al actualizar grupo')
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al actualizar grupo';
+      toast.error(`❌ ${msg}`);
+    }
   });
 
   const deleteMutation = useMutation({
     mutationFn: whatsappGroupsApi.delete,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['whatsapp-groups'] });
-      toast.success('Grupo desactivado correctamente');
+      toast.success('✅ Grupo desactivado correctamente');
     },
-    onError: () => toast.error('Error al desactivar grupo')
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al desactivar grupo';
+      toast.error(`❌ ${msg}`);
+    }
   });
 
   const bulkUpdateMutation = useMutation({
@@ -59,12 +68,15 @@ export default function WhatsAppGroupsPage() {
       whatsappGroupsApi.bulkUpdateUrl(groupId, newUrl),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['whatsapp-groups'] });
-      toast.success(`URL actualizada. ${data.affectedLocations} ubicaciones afectadas`);
+      toast.success(`✅ URL actualizada. ${data.affectedLocations} ubicaciones afectadas`);
       setShowBulkUpdate(false);
       setSelectedGroup(null);
       setForm({ name: '', url: '', capacity: 1000, currentSize: 0, notes: '' });
     },
-    onError: () => toast.error('Error al actualizar URL')
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al actualizar URL';
+      toast.error(`❌ ${msg}`);
+    }
   });
 
   const resetForm = () => {
@@ -270,7 +282,10 @@ export default function WhatsAppGroupsPage() {
       {/* Groups List */}
       <div className="bg-panel rounded-2xl border border-sun/20 shadow-sm overflow-hidden">
         {isLoading ? (
-          <p className="text-center py-8 text-muted">Cargando grupos...</p>
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mb-4"></div>
+            <p className="text-sm text-muted">Cargando grupos de WhatsApp...</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

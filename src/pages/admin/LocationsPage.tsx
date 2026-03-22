@@ -22,15 +22,39 @@ export default function LocationsPage() {
 
   const create = useMutation({
     mutationFn: locationsApi.create,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['locations'] }); setForm(EMPTY); },
+    onSuccess: () => { 
+      qc.invalidateQueries({ queryKey: ['locations'] }); 
+      setForm(EMPTY); 
+      toast.success('✅ Ubicación creada correctamente');
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al crear ubicación';
+      toast.error(`❌ ${msg}`);
+    }
   });
   const update = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Location> }) => locationsApi.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['locations'] }); setEditing(null); setForm(EMPTY); },
+    onSuccess: () => { 
+      qc.invalidateQueries({ queryKey: ['locations'] }); 
+      setEditing(null); 
+      setForm(EMPTY); 
+      toast.success('✅ Ubicación actualizada correctamente');
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al actualizar ubicación';
+      toast.error(`❌ ${msg}`);
+    }
   });
   const remove = useMutation({
     mutationFn: locationsApi.delete,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['locations'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['locations'] });
+      toast.success('✅ Ubicación eliminada correctamente');
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error || 'Error al eliminar ubicación';
+      toast.error(`❌ ${msg}`);
+    }
   });
 
   const assignGroups = useMutation({
@@ -108,7 +132,12 @@ export default function LocationsPage() {
 
       {/* Table */}
       <div className="bg-panel rounded-2xl border border-sun/20 shadow-sm overflow-hidden">
-        {isLoading ? <p className="text-center py-8 text-muted">Cargando…</p> :
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mb-4"></div>
+            <p className="text-sm text-muted">Cargando ubicaciones...</p>
+          </div>
+        ) :
           <table className="w-full text-sm">
             <thead><tr className="border-b border-sun/20 text-left text-xs text-muted">
               <th className="px-4 py-3 font-medium">Tipo</th>
