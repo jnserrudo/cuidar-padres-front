@@ -91,11 +91,10 @@ export default function LocationsPage() {
               className="w-full px-3 py-2 rounded-lg border border-sun/40 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               placeholder="Ej: Abarca Palermo, Villa Crespo y Chacarita" />
           </div>
-          <div className="sm:col-span-2">
-            <label className="text-xs text-muted mb-1 block">Link de WhatsApp</label>
-            <input value={form.whatsappUrl ?? ''} onChange={e => setForm(f => ({ ...f, whatsappUrl: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-sun/40 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              placeholder="https://chat.whatsapp.com/…" />
+          <div className="sm:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-800">
+              💡 <strong>Nota:</strong> Para asignar grupos de WhatsApp a esta ubicación, primero creala y luego usa el botón "Gestionar grupos" en la tabla de abajo.
+            </p>
           </div>
           <div className="sm:col-span-2 flex gap-2">
             <button type="submit" className="px-5 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent/90 transition">

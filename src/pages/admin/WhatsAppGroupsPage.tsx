@@ -208,24 +208,33 @@ export default function WhatsAppGroupsPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-muted mb-1 block">Capacidad máxima</label>
+                <label className="text-xs text-muted mb-1 block">
+                  Capacidad máxima (límite de WhatsApp: 1000)
+                </label>
                 <input
                   type="number"
                   min="1"
+                  max="1000"
                   value={form.capacity || 1000}
                   onChange={e => setForm(f => ({ ...f, capacity: parseInt(e.target.value) }))}
                   className="w-full px-3 py-2 rounded-lg border border-sun/40 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
               </div>
               <div>
-                <label className="text-xs text-muted mb-1 block">Miembros actuales</label>
+                <label className="text-xs text-muted mb-1 block">
+                  Miembros actuales (aproximado - actualizar manualmente)
+                </label>
                 <input
                   type="number"
                   min="0"
                   value={form.currentSize || 0}
                   onChange={e => setForm(f => ({ ...f, currentSize: parseInt(e.target.value) }))}
                   className="w-full px-3 py-2 rounded-lg border border-sun/40 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+                  placeholder="Ej: 250"
                 />
+                <p className="text-[10px] text-muted mt-1">
+                  ⚠️ Este valor es manual. Las personas pueden sumarse o salir del grupo en cualquier momento.
+                </p>
               </div>
             </div>
             <div>
